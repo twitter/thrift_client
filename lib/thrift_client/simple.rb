@@ -169,7 +169,13 @@ class ThriftClient
         version, message_type, method_name_len = s.read(8).unpack("nnN")
         method_name = s.read(method_name_len)
         seq_id = s.read(4).unpack("N").first
-        [ method_name, seq_id, read_struct(s, rv_class).rv ]
+        if message_type == EXCEPTION
+          exception = read_struct(s, ExceptionStruct)
+          raise ThriftException, exception.message
+        end
+        response = read_struct(s, rv_class)
+        raise response.ex.exception if response.respond_to?(:ex) and response.ex
+        [ method_name, seq_id, response.rv ]
       end
     end
 
@@ -218,7 +224,7 @@ class ThriftClient
     end
 
     def self.make_struct(name, *fields)
-      st_name = "ST_#{name}"
+      st_name = "ST_#{name.to_s.tr(':', '_')}"
       if Struct.constants.include?(st_name)
         warn "#{caller[0]}: Struct::#{st_name} is already defined; returning original class."
         Struct.const_get(st_name)
@@ -232,9 +238,41 @@ class ThriftClient
       end
     end
 
+    def self.make_exception(name, *fields)
+      struct_class = self.make_struct(name, *fields)
+      ex_class = Class.new(StandardError)
+
+      (class << struct_class; self end).send(:define_method, :exception_class) { ex_class }
+      (class << ex_class; self end).send(:define_method, :struct_class) { struct_class }
+
+      struct_class.class_eval do
+        def exception
+          @exception ||= self.class.exception_class.new(self)
+        end
+      end
+
+      ex_class.class_eval do
+        attr_reader :struct
+
+        def initialize(struct = nil)
+          self.struct = struct || self.class.struct_class.new
+          super(struct.to_s)
+        end
+
+        struct_class._fields do |field|
+          define_method(field.name) { struct.send(field) }
+        end
+      end
+
+      ex_class
+    end
+
+    ExceptionStruct = make_struct(:ProtocolException, Field.new(:message, STRING, 1), Field.new(:type, I32, 2))
+
     class ThriftService
-      def initialize(sock)
-        @sock = sock
+      def initialize(host, port)
+        @host = host
+        @port = port
       end
 
       def self._arg_structs
@@ -243,8 +281,14 @@ class ThriftClient
       end
 
       def self.thrift_method(name, rtype, *args)
+        options = args.last.is_a?(Hash) ? args.pop : {}
+        fields = [ ThriftClient::Simple::Field.new(:rv, rtype, 0),
+                   (options[:throws] ? ThriftClient::Simple::Field.new(:ex, options[:throws], -1) : nil)
+                 ].compact
+
         arg_struct = ThriftClient::Simple.make_struct("Args__#{self.name}__#{name}", *args)
-        rv_struct = ThriftClient::Simple.make_struct("Retval__#{self.name}__#{name}", ThriftClient::Simple::Field.new(:rv, rtype, 0))
+        rv_struct = ThriftClient::Simple.make_struct("Retval__#{self.name}__#{name}", *fields)
+
         _arg_structs[name.to_sym] = [ arg_struct, rv_struct ]
 
         arg_names = args.map { |a| a.name.to_s }.join(", ")
@@ -255,16 +299,24 @@ class ThriftClient
         cls = self.class.ancestors.find { |cls| cls.respond_to?(:_arg_structs) and cls._arg_structs[method_name.to_sym] }
         arg_class, rv_class = cls._arg_structs[method_name.to_sym]
         arg_struct = arg_class.new(*args)
-        @sock.write(ThriftClient::Simple.pack_request(method_name, arg_struct))
-        rv = ThriftClient::Simple.read_response(@sock, rv_class)
+        sock = TCPSocket.new(@host, @port)
+        sock.write(ThriftClient::Simple.pack_request(method_name, arg_struct))
+        rv = ThriftClient::Simple.read_response(sock, rv_class)
+        sock.close
         rv[2]
       end
 
       # convenience. robey is lazy.
-      [[ :field, "Field.new" ], [ :struct, "StructType.new" ],
-       [ :list, "ListType.new" ], [ :map, "MapType.new" ]].each do |new_name, old_name|
+      { :field => "Field.new",
+        :struct => "StructType.new",
+        :exception => "StructType.new",
+        :list => "ListType.new",
+        :map => "MapType.new",
+      }.each do |new_name, old_name|
         class_eval "def self.#{new_name}(*args); ThriftClient::Simple::#{old_name}(*args); end"
       end
+
+#      alias exception struct
 
       [ :void, :bool, :byte, :double, :i16, :i32, :i64, :string ].each { |sym| class_eval "def self.#{sym}; ThriftClient::Simple::#{sym.to_s.upcase}; end" }
     end
