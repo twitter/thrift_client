@@ -107,7 +107,7 @@ class ThriftClient
         when MAP
           read_map(s)
         when STRUCT
-          read_struct(s)
+          read_struct(s, UnknownStruct)
         when ListType
           read_list(s, type.element_type)
         when MapType
@@ -153,18 +153,23 @@ class ThriftClient
         rv
       end
 
-      def read_struct(s, struct_class=nil)
-        rv = struct_class.new()
+      def read_struct(s, struct_class)
+        struct = struct_class.new
         while true
-          type = s.read(1).unpack("c").first
-          return rv if type == STOP
+          ftype = s.read(1).unpack("c").first
+          return struct if ftype == STOP
           fid = s.read(2).unpack("n").first
-          field = struct_class ? struct_class._fields.find { |f| (f.fid == fid) and (f.type.to_i == type) } : nil
-          value = read_value(s, field ? field.type : type)
-          rv[field.name] = value if field
+
+          if field = struct_class._fields.find { |f| (f.fid == fid) and (f.type.to_i == ftype) }
+            struct[field.name] = read_value(s, field.type)
+          else
+            $stderr.puts "Warning: Unknown struct field encountered. (recieved id: #{fid})"
+            raise "Warning: Unknown struct field encountered. (recieved id: #{fid})"
+            read_value(s, ftype)
+          end
         end
       end
-
+      
       def read_response(s, rv_class)
         version, message_type, method_name_len = s.read(8).unpack("nnN")
         method_name = s.read(method_name_len)
@@ -174,7 +179,8 @@ class ThriftClient
           raise ThriftException, exception.message
         end
         response = read_struct(s, rv_class)
-        raise response.ex.exception if response.respond_to?(:ex) and response.ex
+        require 'ruby-debug'; debugger if response.ex
+        raise response.ex if response.respond_to?(:ex) and response.ex
         [ method_name, seq_id, response.rv ]
       end
     end
@@ -245,22 +251,26 @@ class ThriftClient
       (class << struct_class; self end).send(:define_method, :exception_class) { ex_class }
       (class << ex_class; self end).send(:define_method, :struct_class) { struct_class }
 
-      struct_class.class_eval do
-        def exception
-          @exception ||= self.class.exception_class.new(self)
-        end
-      end
-
       ex_class.class_eval do
         attr_reader :struct
 
-        def initialize(struct = nil)
-          self.struct = struct || self.class.struct_class.new
-          super(struct.to_s)
+        def initialize
+          @struct = self.class.struct_class.new
         end
 
-        struct_class._fields do |field|
-          define_method(field.name) { struct.send(field) }
+        def self._fields
+          struct_class._fields
+        end
+
+        def to_s
+          method = [:message, :description].find {|m| struct.respond_to? m }
+          struct.send method || :to_s
+        end
+
+        alias message to_s
+
+        def method_missing(method, *args)
+          struct.send(method, *args)
         end
       end
 
@@ -268,6 +278,7 @@ class ThriftClient
     end
 
     ExceptionStruct = make_struct(:ProtocolException, Field.new(:message, STRING, 1), Field.new(:type, I32, 2))
+    UnknownStruct = make_struct(:Unknown)
 
     class ThriftService
       def initialize(host, port)
@@ -283,7 +294,7 @@ class ThriftClient
       def self.thrift_method(name, rtype, *args)
         options = args.last.is_a?(Hash) ? args.pop : {}
         fields = [ ThriftClient::Simple::Field.new(:rv, rtype, 0),
-                   (options[:throws] ? ThriftClient::Simple::Field.new(:ex, options[:throws], -1) : nil)
+                   (options[:throws] ? ThriftClient::Simple::Field.new(:ex, options[:throws], 1) : nil)
                  ].compact
 
         arg_struct = ThriftClient::Simple.make_struct("Args__#{self.name}__#{name}", *args)
