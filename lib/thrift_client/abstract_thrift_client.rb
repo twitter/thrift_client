@@ -148,7 +148,7 @@ class AbstractThriftClient
   end
 
   def disconnect_on_error!
-    @current_server.mark_down!
+    @current_server.mark_down! if @current_server
     disconnect!
   end
 

@@ -1,3 +1,5 @@
+v0.5.1-pre Fix bug where we'd try to mark the current server down when we didn't have a current server.
+
 v0.5.0 Add support for wrapping exceptions, so that Thrift::Foo can become Greeter::Foo.
 Make server_retry_period work the way you expect.
 Better bookkeeping around marking servers as dead.
