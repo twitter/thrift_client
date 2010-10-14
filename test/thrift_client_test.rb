@@ -1,4 +1,4 @@
-require "#{File.dirname(__FILE__)}/test_helper"
+require "./#{File.dirname(__FILE__)}/test_helper.rb"
 
 class ThriftClientTest < Test::Unit::TestCase
 
@@ -49,7 +49,7 @@ class ThriftClientTest < Test::Unit::TestCase
       # disconnect_on_error! is called every time a server related
       # connection error happens. it will be called every try (so, retries + 1)
       singleton_class.send :define_method, :disconnect_on_error! do |*args|
-        times_called += 1; super
+        times_called += 1; super *args
       end
 
       assert_raises(Greeter::Client::TransportException) { client.greeting("someone") }

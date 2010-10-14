@@ -1,4 +1,4 @@
-require "#{File.dirname(__FILE__)}/test_helper"
+require "./#{File.dirname(__FILE__)}/test_helper.rb"
 
 class MultipleWorkingServersTest < Test::Unit::TestCase
   def setup
