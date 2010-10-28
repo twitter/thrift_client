@@ -1,4 +1,4 @@
-require "./#{File.dirname(__FILE__)}/test_helper.rb"
+require File.expand_path('test_helper.rb', File.dirname(__FILE__))
 require "thrift/server/mongrel_http_server"
 
 class ThriftClientHTTPTest < Test::Unit::TestCase
