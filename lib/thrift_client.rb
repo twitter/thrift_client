@@ -1,8 +1,5 @@
-require 'rubygems'
-gem 'thrift', '~>0.2.0'
 require 'thrift'
 
-require 'rubygems'
 require 'thrift_client/thrift'
 require 'thrift_client/connection'
 require 'thrift_client/abstract_thrift_client'
