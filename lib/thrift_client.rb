@@ -1,5 +1,5 @@
 require 'rubygems'
-gem 'thrift', '~>0.2.0'
+gem 'thrift', '~>0.5.0'
 require 'thrift'
 
 require 'rubygems'

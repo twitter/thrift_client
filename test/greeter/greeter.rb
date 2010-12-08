@@ -55,10 +55,9 @@ module Greeter
   # HELPER FUNCTIONS AND STRUCTURES
 
   class Greeting_args
-    include ::Thrift::Struct
+    include ::Thrift::Struct, ::Thrift::Struct_Union
     NAME = 1
 
-    ::Thrift::Struct.field_accessor self, :name
     FIELDS = {
       NAME => {:type => ::Thrift::Types::STRING, :name => 'name'}
     }
@@ -68,13 +67,13 @@ module Greeter
     def validate
     end
 
+    ::Thrift::Struct.generate_accessors self
   end
 
   class Greeting_result
-    include ::Thrift::Struct
+    include ::Thrift::Struct, ::Thrift::Struct_Union
     SUCCESS = 0
 
-    ::Thrift::Struct.field_accessor self, :success
     FIELDS = {
       SUCCESS => {:type => ::Thrift::Types::STRING, :name => 'success'}
     }
@@ -84,13 +83,13 @@ module Greeter
     def validate
     end
 
+    ::Thrift::Struct.generate_accessors self
   end
 
   class Yo_args
-    include ::Thrift::Struct
+    include ::Thrift::Struct, ::Thrift::Struct_Union
     NAME = 1
 
-    ::Thrift::Struct.field_accessor self, :name
     FIELDS = {
       NAME => {:type => ::Thrift::Types::STRING, :name => 'name'}
     }
@@ -100,10 +99,11 @@ module Greeter
     def validate
     end
 
+    ::Thrift::Struct.generate_accessors self
   end
 
   class Yo_result
-    include ::Thrift::Struct
+    include ::Thrift::Struct, ::Thrift::Struct_Union
 
     FIELDS = {
 
@@ -114,6 +114,7 @@ module Greeter
     def validate
     end
 
+    ::Thrift::Struct.generate_accessors self
   end
 
 end
