@@ -38,6 +38,7 @@ class AbstractThriftClient
     :server_max_requests => nil,
     :retry_overrides => {},
     :wrapped_exception_classes => DEFAULT_WRAPPED_ERRORS,
+    :connect_timeout => 0.1,
     :timeout => 1,
     :timeout_overrides => {}
   }
@@ -78,7 +79,7 @@ class AbstractThriftClient
   # call.
   def connect!
     @current_server = next_live_server
-    @connection = Connection::Factory.create(@options[:transport], @options[:transport_wrapper], @current_server.connection_string, @options[:timeout])
+    @connection = Connection::Factory.create(@options[:transport], @options[:transport_wrapper], @current_server.connection_string, @options[:connect_timeout])
     @connection.connect!
     @client = @client_class.new(@options[:protocol].new(@connection.transport, *@options[:protocol_extra_params]))
   end
