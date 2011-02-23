@@ -91,12 +91,25 @@ class ThriftClientTest < Test::Unit::TestCase
     end
   end
 
+  def test_socket_timeout
+    stub_server(@port) do |socket|
+      measurement = Benchmark.measure do
+        assert_raises(Greeter::Client::TransportException) do
+          ThriftClient.new(Greeter::Client, "127.0.0.1:#{@port}",
+            @options.merge(:timeout => 1, :connect_timeout => 0.5)
+            ).greeting("someone")
+        end
+      end
+      assert(measurement.real > 0.5 && measurement.real < 1)
+    end
+  end
+
   def test_framed_transport_timeout
     stub_server(@port) do |socket|
       measurement = Benchmark.measure do
         assert_raises(Greeter::Client::TransportException) do
           ThriftClient.new(Greeter::Client, "127.0.0.1:#{@port}",
-            @options.merge(:timeout => @timeout)
+            @options.merge(:timeout => @timeout, :connect_timeout => @timeout)
           ).greeting("someone")
         end
       end
@@ -108,7 +121,7 @@ class ThriftClientTest < Test::Unit::TestCase
     stub_server(@port) do |socket|
       measurement = Benchmark.measure do
         client = ThriftClient.new(Greeter::Client, "127.0.0.1:#{@port}",
-          @options.merge(:timeout => @timeout, :transport_wrapper => Thrift::BufferedTransport)
+          @options.merge(:timeout => @timeout, :transport_wrapper => Thrift::BufferedTransport, :connect_timeout => @timeout)
         )
         assert_raises(Greeter::Client::TransportException) do
           client.greeting("someone")
