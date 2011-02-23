@@ -10,7 +10,5 @@ Echoe.new("thrift_client") do |p|
   p.dependencies = ['thrift ~>0.5.0']
   p.ignore_pattern = /^(vendor\/thrift)/
   p.rdoc_pattern = /^(lib|bin|tasks|ext)|^README|^CHANGELOG|^TODO|^LICENSE|^COPYING$/
-  p.url = "http://blog.evanweaver.com/files/doc/fauna/thrift_client/"
-  p.docs_host = "blog.evanweaver.com:~/www/bax/public/files/doc/"
   p.spec_pattern = "spec/*_spec.rb"
 end
