@@ -79,7 +79,7 @@ class AbstractThriftClient
   # call.
   def connect!
     @current_server = next_live_server
-    @connection = Connection::Factory.create(@options[:transport], @options[:transport_wrapper], @current_server.connection_string, @options[:connect_timeout])
+    @connection = ThriftConnection::Factory.create(@options[:transport], @options[:transport_wrapper], @current_server.connection_string, @options[:connect_timeout])
     @connection.connect!
     @client = @client_class.new(@options[:protocol].new(@connection.transport, *@options[:protocol_extra_params]))
   end
