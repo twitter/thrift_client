@@ -3,7 +3,7 @@ require File.expand_path('../lib/thrift_client/version', __FILE__)
 
 Gem::Specification.new do |gem|
   gem.name = 'thrift_client'
-  gem.version = ThriftClient::VERSION.dup
+  gem.version = '0.6.1'
   gem.add_runtime_dependency 'thrift', '~> 0.6.0'
   gem.add_development_dependency 'rake', '~> 0.8'
   gem.add_development_dependency 'mongrel', '~> 1.1'
