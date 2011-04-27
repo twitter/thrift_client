@@ -4,7 +4,7 @@ require File.expand_path('../lib/thrift_client/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.name = 'thrift_client'
   gem.version = ThriftClient::VERSION.dup
-  gem.add_runtime_dependency 'thrift', '~> 0.5.0'
+  gem.add_runtime_dependency 'thrift', '~> 0.6.0'
   gem.add_development_dependency 'rake', '~> 0.8'
   gem.add_development_dependency 'mongrel', '~> 1.1'
   gem.required_rubygems_version = Gem::Requirement.new(">= 0.8") if gem.respond_to? :required_rubygems_version=
