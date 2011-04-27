@@ -7,7 +7,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'thrift', '~> 0.6.0'
   gem.add_development_dependency 'rake', '~> 0.8'
   gem.add_development_dependency 'mongrel', '~> 1.1'
-  gem.required_rubygems_version = Gem::Requirement.new(">= 0.8") if gem.respond_to? :required_rubygems_version=
+  gem.required_rubygems_version = Gem::Requirement.new(">= 1.2.0") if gem.respond_to? :required_rubygems_version=
   gem.authors = ["Evan Weaver", "Ryan King", "Jeff Hodges"]
   gem.description = "A Thrift client wrapper that encapsulates some common failover behavior."
   gem.email = ["evan@cloudbur.st", "ryan@theryanking.com", "jeff@somethingsimilar.com"]
