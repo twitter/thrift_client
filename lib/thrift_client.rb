@@ -1,8 +1,4 @@
-require 'rubygems'
-gem 'thrift', '~>0.5.0'
 require 'thrift'
-
-require 'rubygems'
 require 'thrift_client/thrift'
 require 'thrift_client/connection'
 require 'thrift_client/abstract_thrift_client'
@@ -27,7 +23,6 @@ Valid optional parameters are:
 <tt>:timeout</tt>:: Specify the default timeout in seconds. Defaults to <tt>1</tt>.
 <tt>:timeout_overrides</tt>:: Specify additional timeouts on a per-method basis, in seconds. Only works with <tt>Thrift::BufferedTransport</tt>.
 <tt>:defaults</tt>:: Specify default values to return on a per-method basis, if <tt>:raise</tt> is set to false.
-
 =end rdoc
 
   def initialize(client_class, servers, options = {})
