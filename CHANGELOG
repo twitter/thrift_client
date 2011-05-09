@@ -1,3 +1,5 @@
+v0.6.2 Remove lingering thrift v0.5.0 reference.
+
 v0.6.1 Add connect timeout. Bump thrift dependency to ~> v0.6.0.
 
 v0.6.0 Fix bug where we'd try to mark the current server down when we didn't have a current server.
