@@ -21,6 +21,7 @@ Valid optional parameters are:
 <tt>:server_retry_period</tt>:: How many seconds to wait before trying to reconnect to a dead server. Defaults to <tt>1</tt>. Set to <tt>nil</tt> to disable.
 <tt>:server_max_requests</tt>:: How many requests to perform before moving on to the next server in the pool, regardless of error status. Defaults to <tt>nil</tt> (no limit).
 <tt>:timeout</tt>:: Specify the default timeout in seconds. Defaults to <tt>1</tt>.
+<tt>:connect_timeout</tt>:: Specify the connection timeout in seconds. Defaults to <tt>0.1</tt>.
 <tt>:timeout_overrides</tt>:: Specify additional timeouts on a per-method basis, in seconds. Only works with <tt>Thrift::BufferedTransport</tt>.
 <tt>:defaults</tt>:: Specify default values to return on a per-method basis, if <tt>:raise</tt> is set to false.
 =end rdoc
