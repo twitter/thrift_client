@@ -52,6 +52,7 @@ class AbstractThriftClient
     @server_list = Array(servers).collect{|s| Server.new(s)}.sort_by { rand }
     @current_server = @server_list.first
 
+    @callbacks = {}
     @client_methods = []
     @client_class.instance_methods.each do |method_name|
       if method_name != 'send_message' && method_name =~ /^send_(.*)$/
@@ -70,6 +71,16 @@ class AbstractThriftClient
     end
   end
 
+  def add_callback(cb, &blk)
+    if cb == :post_connect
+      @callbacks[cb] = blk
+      # Allow chaining
+      return self
+    else
+      return nil
+    end
+  end
+
   def inspect
     "<#{self.class}(#{client_class}) @current_server=#{@current_server}>"
   end
@@ -84,6 +95,7 @@ class AbstractThriftClient
     transport = @connection.transport
     transport.timeout = @options[:timeout] if transport_can_timeout?
     @client = @client_class.new(@options[:protocol].new(transport, *@options[:protocol_extra_params]))
+    @callbacks[:post_connect].call(self) if @callbacks[:post_connect]
   end
 
   def disconnect!
