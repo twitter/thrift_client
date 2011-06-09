@@ -1,4 +1,13 @@
 module Thrift
+  class BaseTransport
+    def timeout=(timeout)
+    end
+
+    def timeout
+      nil
+    end
+  end
+
   class BufferedTransport
     def timeout=(timeout)
       @transport.timeout = timeout
@@ -18,7 +27,7 @@ module Thrift
       @transport.timeout
     end
   end
-
+  
   module Client
     def timeout=(timeout)
       @iprot.trans.timeout = timeout

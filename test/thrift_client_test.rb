@@ -100,7 +100,7 @@ class ThriftClientTest < Test::Unit::TestCase
             ).greeting("someone")
         end
       end
-      assert(measurement.real > 0.5 && measurement.real < 1)
+      assert(measurement.real > 0.5 && measurement.real < 1.05)
     end
   end
 
