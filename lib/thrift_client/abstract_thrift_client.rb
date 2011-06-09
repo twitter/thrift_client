@@ -81,7 +81,9 @@ class AbstractThriftClient
     @current_server = next_live_server
     @connection = Connection::Factory.create(@options[:transport], @options[:transport_wrapper], @current_server.connection_string, @options[:connect_timeout])
     @connection.connect!
-    @client = @client_class.new(@options[:protocol].new(@connection.transport, *@options[:protocol_extra_params]))
+    transport = @connection.transport
+    transport.timeout = @options[:timeout] if transport_can_timeout?
+    @client = @client_class.new(@options[:protocol].new(transport, *@options[:protocol_extra_params]))
   end
 
   def disconnect!
