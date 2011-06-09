@@ -83,12 +83,42 @@ class ThriftClientTest < Test::Unit::TestCase
     end
   end
 
+  def test_post_conn_cb
+    calledcnt = 0
+    client = ThriftClient.new(Greeter::Client, @servers, @options.merge(:retries => 2))
+    r = client.add_callback :post_connect do |cl|
+      calledcnt += 1
+      assert_equal(client, cl)
+    end
+    assert_equal(client, r)
+    assert_nothing_raised do
+      client.greeting("someone")
+      client.disconnect!
+    end
+    assert_equal(1, calledcnt)
+  end
+
+
+  def test_unknown_cb
+    calledcnt = 0
+    client = ThriftClient.new(Greeter::Client, @servers, @options.merge(:retries => 2))
+    r = client.add_callback :unknown do |cl|
+      assert(false)
+    end
+    assert_equal(nil, r)
+  end
+
   def test_no_servers_eventually_raise
+    wascalled = false
     client = ThriftClient.new(Greeter::Client, @servers[0,2], @options.merge(:retries => 2))
+    client.add_callback :post_connect do
+      wascalled = true
+    end
     assert_raises(ThriftClient::NoServersAvailable) do
       client.greeting("someone")
       client.disconnect!
     end
+    assert(!wascalled)
   end
 
   def test_socket_timeout
