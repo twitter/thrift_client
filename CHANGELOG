@@ -1,3 +1,11 @@
+v0.6.3 Document the :connect_timeout option.
+Add support for specifying client-side timeouts when using FramedTransport
+set transport timeout after connection is established
+Add a method `add_callback` allowing a client to register a block that is invoked at a certain event.
+Fixup socket timeouts.
+
+
+
 v0.6.2 Remove lingering thrift v0.5.0 reference.
 
 v0.6.1 Add connect timeout. Bump thrift dependency to ~> v0.6.0.
