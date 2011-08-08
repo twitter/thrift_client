@@ -16,7 +16,7 @@ Valid optional parameters are:
 <tt>:transport</tt>:: Which Thrift transport to use. Defaults to <tt>Thrift::Socket</tt>.
 <tt>:transport_wrapper</tt>:: Which Thrift transport wrapper to use. Defaults to <tt>Thrift::FramedTransport</tt>.
 <tt>:exception_classes</tt>:: Which exceptions to catch and retry when sending a request. Defaults to <tt>[IOError, Thrift::Exception, Thrift::ApplicationException, Thrift::TransportException, NoServersAvailable]</tt>
-<tt>:exception_classes_without_disconnect</tt>:: Some exceptions inherit from Thrift::Exception but do not require a reconnection. These are generally application-specific.
+<tt>:exception_class_overrides</tt>:: For specifying children of classes in exception_classes for which you don't want to retry or reconnect.
 <tt>:raise</tt>:: Whether to reraise errors if no responsive servers are found. Defaults to <tt>true</tt>.
 <tt>:retries</tt>:: How many times to retry a request. Defaults to 0.
 <tt>:server_retry_period</tt>:: How many seconds to wait before trying to reconnect to a dead server. Defaults to <tt>1</tt>. Set to <tt>nil</tt> to disable.

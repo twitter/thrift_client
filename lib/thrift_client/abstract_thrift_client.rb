@@ -33,7 +33,7 @@ class AbstractThriftClient
     :raise => true,
     :defaults => {},
     :exception_classes => DISCONNECT_ERRORS,
-    :exception_classes_without_disconnect => [],
+    :exception_class_overrides => [],
     :retries => 0,
     :server_retry_period => 1,
     :server_max_requests => nil,
@@ -129,7 +129,7 @@ class AbstractThriftClient
       end
       @request_count += 1
       @client.send(method_name, *args)
-    rescue *@options[:exception_classes_without_disconnect] => e
+    rescue *@options[:exception_class_overrides] => e
       raise_or_default(e, method_name)
     rescue *@options[:exception_classes] => e
       disconnect_on_error!
