@@ -98,6 +98,35 @@ class ThriftClientTest < Test::Unit::TestCase
     assert_equal(1, calledcnt)
   end
 
+  def test_before_method_cb
+    before_method_counts = Hash.new { |hash, key| hash[key] = 0 }
+    client = ThriftClient.new(Greeter::Client, @servers, @options.merge(:retries => 2))
+    r = client.add_callback :before_method do |method_name|
+      before_method_counts[method_name.to_sym] += 1
+    end
+    assert_equal(client, r)
+    assert_nothing_raised do
+      client.greeting("someone")
+      client.yo("dude")
+      client.yo("dawg")
+      client.disconnect!
+    end
+    assert_equal({:greeting => 1, :yo => 2}, before_method_counts)
+  end
+
+  def test_on_exception_cb
+    on_exception_counts = Hash.new { |h1, method_name| h1[method_name] = Hash.new { |h2, clazz| h2[clazz] = 0 }}
+    client = ThriftClient.new(Greeter::Client, @servers[0,2], @options.merge(:retries => 2))
+    r = client.add_callback :on_exception do |error, method_name|
+      on_exception_counts[method_name.to_sym][error.class] += 1
+    end
+    assert_equal(client, r)
+    assert_raises(ThriftClient::NoServersAvailable) do
+      client.greeting("someone")
+      client.disconnect!
+    end
+    assert_equal({:greeting => {ThriftClient::NoServersAvailable => 1}}, on_exception_counts)
+  end
 
   def test_unknown_cb
     calledcnt = 0
