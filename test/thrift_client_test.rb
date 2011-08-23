@@ -137,6 +137,23 @@ class ThriftClientTest < Test::Unit::TestCase
     assert_equal(nil, r)
   end
 
+  def test_multiple_cb
+    calledcnt = 0
+    client = ThriftClient.new(Greeter::Client, @servers, @options.merge(:retries => 2))
+    2.times do |i|
+      r = client.add_callback :post_connect do |cl|
+        calledcnt += 1
+        assert_equal(client, cl)
+      end
+      assert_equal(client, r)
+    end
+    assert_nothing_raised do
+      client.greeting("someone")
+      client.disconnect!
+    end
+    assert_equal(2, calledcnt)
+  end
+
   def test_no_servers_eventually_raise
     wascalled = false
     client = ThriftClient.new(Greeter::Client, @servers[0,2], @options.merge(:retries => 2))
