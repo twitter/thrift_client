@@ -72,9 +72,19 @@ class AbstractThriftClient
     end
   end
 
-  def add_callback(cb, &blk)
-    if cb == :post_connect
-      @callbacks[cb] = blk
+  # Adds a callback that will be invoked at a certain time. The valid callback types are:
+  #   :post_connect  - should accept a single AbstractThriftClient argument, which is the client object to
+  #                    which the callback was added. Called after a connection to the remote thrift server
+  #                    is established.
+  #   :before_method - should accept a single method name argument. Called before a method is invoked on the
+  #                    thrift server.
+  #   :on_exception  - should accept 2 args: an Exception instance and a method name. Called right before the
+  #                    exception is raised.
+  def add_callback(callback_type, &block)
+    case callback_type
+    when :post_connect, :before_method, :on_exception
+      @callbacks[callback_type] ||= []
+      @callbacks[callback_type].push(block)
       # Allow chaining
       return self
     else
@@ -96,7 +106,7 @@ class AbstractThriftClient
     transport = @connection.transport
     transport.timeout = @options[:timeout] if transport_can_timeout?
     @client = @client_class.new(@options[:protocol].new(transport, *@options[:protocol_extra_params]))
-    @callbacks[:post_connect].call(self) if @callbacks[:post_connect]
+    do_callbacks(:post_connect, self)
   end
 
   def disconnect!
@@ -107,6 +117,14 @@ class AbstractThriftClient
   end
 
   private
+
+  # Calls all callbacks of the specified type with the given args
+  def do_callbacks(callback_type_sym, *args)
+    return unless @callbacks[callback_type_sym]
+    @callbacks[callback_type_sym].each do |callback|
+      callback.call(*args)
+    end
+  end
 
   def next_live_server
     @server_index ||= 0
@@ -128,6 +146,7 @@ class AbstractThriftClient
         @client.timeout = @options[:timeout_overrides][method_name.to_sym] || @options[:timeout]
       end
       @request_count += 1
+      do_callbacks(:before_method, method_name)
       @client.send(method_name, *args)
     rescue *@options[:exception_class_overrides] => e
       raise_or_default(e, method_name)
@@ -147,13 +166,14 @@ class AbstractThriftClient
 
   def raise_or_default(e, method_name)
     if @options[:raise]
-      raise_wrapped_error(e)
+      raise_wrapped_error(e, method_name)
     else
       @options[:defaults][method_name.to_sym]
     end
   end
 
-  def raise_wrapped_error(e)
+  def raise_wrapped_error(e, method_name)
+    do_callbacks(:on_exception, e, method_name)
     if @options[:wrapped_exception_classes].include?(e.class)
       raise @client_class.const_get(e.class.to_s.split('::').last), e.message, e.backtrace
     else
