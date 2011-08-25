@@ -1,3 +1,6 @@
+v0.7.1 Added support for :before_method and :on_exception callback types.
+Added support for registering multiple callbacks of a given type.
+
 v0.7.0 Updated thrift gem dependency to 0.7.0
 
 v0.6.3 Document the :connect_timeout option.
