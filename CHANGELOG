@@ -1,3 +1,5 @@
+v0.7.2 Updated thrift gem dependency to 0.8.0
+
 v0.7.1 Added support for :before_method and :on_exception callback types.
 Added support for registering multiple callbacks of a given type.
 
