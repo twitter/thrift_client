@@ -1,3 +1,5 @@
+v0.8.1 Fixed permissions?
+
 v0.8.0 Update to thrift 0.8.0
 
 v0.7.1 Added support for :before_method and :on_exception callback types.
