@@ -101,7 +101,7 @@ class AbstractThriftClient
   # call.
   def connect!
     @current_server = next_live_server
-    @connection = Connection::Factory.create(@options[:transport], @options[:transport_wrapper], @current_server.connection_string, @options[:connect_timeout])
+    @connection = ThriftConnection::Factory.create(@options[:transport], @options[:transport_wrapper], @current_server.connection_string, @options[:connect_timeout])
     @connection.connect!
     transport = @connection.transport
     transport.timeout = @options[:timeout] if transport_can_timeout?
