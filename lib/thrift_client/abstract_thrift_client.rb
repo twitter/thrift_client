@@ -1,5 +1,3 @@
-require 'thrift_client/server'
-
 class AbstractThriftClient
   include ThriftHelpers
 
@@ -91,10 +89,11 @@ class AbstractThriftClient
   # call.
   def connect!
     @current_server = next_live_server
-    @current_server.open(@options[:transport], @options[:transport_wrapper], @options[:connect_timeout])
-    transport = @current_server.transport
-    transport.timeout = @options[:timeout] if transport_can_timeout?
-    @client = @client_class.new(@options[:protocol].new(transport, *@options[:protocol_extra_params]))
+    @current_server.open(@options[:transport],
+                         @options[:transport_wrapper],
+                         @options[:connect_timeout],
+                         @options[:timeout])
+    @client = @client_class.new(@options[:protocol].new(@current_server, *@options[:protocol_extra_params]))
     do_callbacks(:post_connect, self)
   rescue IOError, Thrift::TransportException
     disconnect!(true)
@@ -131,7 +130,7 @@ class AbstractThriftClient
         return @server_list[cur]
       end
     end
-    raise ThriftClient::NoServersAvailable, "No live servers in #{@server_list.inspect} since #{@last_rebuild.inspect}."
+    raise ThriftClient::NoServersAvailable, "No live servers in #{@server_list.inspect}."
   end
 
   def handled_proxy(method_name, *args)

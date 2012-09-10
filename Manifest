@@ -11,6 +11,7 @@ lib/thrift_client/connection/factory.rb
 lib/thrift_client/connection/http.rb
 lib/thrift_client/connection/socket.rb
 lib/thrift_client/event_machine.rb
+lib/thrift_client/server.rb
 lib/thrift_client/simple.rb
 lib/thrift_client/thrift.rb
 test/greeter/greeter.rb
