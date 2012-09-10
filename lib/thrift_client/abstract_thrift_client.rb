@@ -134,7 +134,7 @@ class AbstractThriftClient
   end
 
   def handled_proxy(method_name, *args)
-    disconnect_on_max! if @options[:server_max_requests] && @request_count >= @options[:server_max_requests]
+    disconnect! if @options[:server_max_requests] && @request_count >= @options[:server_max_requests]
     begin
       connect! unless @client
       if has_timeouts?
@@ -174,10 +174,6 @@ class AbstractThriftClient
     else
       raise e
     end
-  end
-
-  def disconnect_on_max!
-    disconnect!
   end
 
   def disconnect_on_error!
