@@ -40,7 +40,7 @@ class AbstractThriftClient
     @options[:server_retry_period] ||= 0
     @client_class = client_class
     @server_list = Array(servers).collect do |s|
-      Server.new(s, @options[:cache_connections])
+      Server.new(s, @options[:cached_connections])
     end.sort_by { rand }
     @current_server = @server_list.first
 
