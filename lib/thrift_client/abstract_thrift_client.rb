@@ -1,17 +1,7 @@
+require 'thrift_client/server'
+
 class AbstractThriftClient
-
-  class Server
-    attr_reader :connection_string, :marked_down_at
-
-    def initialize(connection_string)
-      @connection_string = connection_string
-    end
-    alias to_s connection_string
-
-    def mark_down!
-      @marked_down_at = Time.now
-    end
-  end
+  include ThriftHelpers
 
   DISCONNECT_ERRORS = [
     IOError,
@@ -101,19 +91,22 @@ class AbstractThriftClient
   # call.
   def connect!
     @current_server = next_live_server
-    @connection = Connection::Factory.create(@options[:transport], @options[:transport_wrapper], @current_server.connection_string, @options[:connect_timeout])
-    @connection.connect!
-    transport = @connection.transport
+    @current_server.open(@options[:transport], @options[:transport_wrapper], @options[:connect_timeout])
+    transport = @current_server.transport
     transport.timeout = @options[:timeout] if transport_can_timeout?
     @client = @client_class.new(@options[:protocol].new(transport, *@options[:protocol_extra_params]))
     do_callbacks(:post_connect, self)
   rescue IOError, Thrift::TransportException
-    disconnect_on_error!
+    disconnect!(true)
     retry
   end
 
-  def disconnect!
-    @connection.close rescue nil #TODO
+  def disconnect!(error = false)
+    if @current_server
+      @current_server.mark_down!(@options[:server_retry_period]) if error
+      @current_server.close
+    end
+
     @client = nil
     @current_server = nil
     @request_count = 0
@@ -133,7 +126,7 @@ class AbstractThriftClient
     @server_index ||= 0
     @server_list.length.times do |i|
       cur = (1 + @server_index + i) % @server_list.length
-      if !@server_list[cur].marked_down_at || (@server_list[cur].marked_down_at + @options[:server_retry_period] <= Time.now)
+      if @server_list[cur].up?
         @server_index = cur
         return @server_list[cur]
       end
@@ -142,7 +135,7 @@ class AbstractThriftClient
   end
 
   def handled_proxy(method_name, *args)
-    disconnect_on_max! if @options[:server_max_requests] && @request_count >= @options[:server_max_requests]
+    disconnect! if @options[:server_max_requests] && @request_count >= @options[:server_max_requests]
     begin
       connect! unless @client
       if has_timeouts?
@@ -154,7 +147,7 @@ class AbstractThriftClient
     rescue *@options[:exception_class_overrides] => e
       raise_or_default(e, method_name)
     rescue *@options[:exception_classes] => e
-      disconnect_on_error!
+      disconnect!(true)
       tries ||= (@options[:retry_overrides][method_name.to_sym] || @options[:retries]) + 1
       tries -= 1
       if tries > 0
@@ -182,15 +175,6 @@ class AbstractThriftClient
     else
       raise e
     end
-  end
-
-  def disconnect_on_max!
-    disconnect!
-  end
-
-  def disconnect_on_error!
-    @current_server.mark_down! if @current_server
-    disconnect!
   end
 
   def has_timeouts?
