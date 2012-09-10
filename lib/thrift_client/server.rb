@@ -2,19 +2,17 @@ require 'thrift_client/connection'
 
 module ThriftHelpers
   class Server
-    attr_reader :marked_down_at
-
     class ServerMarkedDown < StandardError; end
 
     def initialize(connection_string)
       @connection_string = connection_string
       @connection = nil
-      @marked_down_at = nil
+      @marked_down_til = nil
     end
 
     def open(trans, wrap, timeout)
       if down?
-        raise ServerMarkedDown, "marked down at #{@marked_down_at}"
+        raise ServerMarkedDown, "marked down until #{@marked_down_til}"
       end
 
       @connection = Connection::Factory.create(trans, wrap, @connection_string, timeout)
@@ -31,12 +29,16 @@ module ThriftHelpers
       @connection.transport
     end
 
-    def mark_down!
-      @marked_down_at = Time.now
+    def mark_down!(til)
+      @marked_down_til = Time.now + til
+    end
+
+    def up?
+      !down?
     end
 
     def down?
-      @marked_down_at && @marked_down_at > Time.now
+      @marked_down_til && @marked_down_til > Time.now
     end
 
     def to_s

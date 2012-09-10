@@ -125,7 +125,7 @@ class AbstractThriftClient
     @server_index ||= 0
     @server_list.length.times do |i|
       cur = (1 + @server_index + i) % @server_list.length
-      if !@server_list[cur].marked_down_at || (@server_list[cur].marked_down_at + @options[:server_retry_period] <= Time.now)
+      if @server_list[cur].up?
         @server_index = cur
         return @server_list[cur]
       end
@@ -181,7 +181,7 @@ class AbstractThriftClient
   end
 
   def disconnect_on_error!
-    @current_server.mark_down! if @current_server
+    @current_server.mark_down!(@options[:server_retry_period]) if @current_server
     disconnect!
   end
 
