@@ -107,6 +107,9 @@ class AbstractThriftClient
     transport.timeout = @options[:timeout] if transport_can_timeout?
     @client = @client_class.new(@options[:protocol].new(transport, *@options[:protocol_extra_params]))
     do_callbacks(:post_connect, self)
+  rescue IOError, Thrift::TransportException
+    disconnect_on_error!
+    retry
   end
 
   def disconnect!
