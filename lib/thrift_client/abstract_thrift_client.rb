@@ -97,12 +97,13 @@ class AbstractThriftClient
     @client = @client_class.new(@options[:protocol].new(transport, *@options[:protocol_extra_params]))
     do_callbacks(:post_connect, self)
   rescue IOError, Thrift::TransportException
-    disconnect_on_error!
+    disconnect!(true)
     retry
   end
 
-  def disconnect!
+  def disconnect!(error = false)
     if @current_server
+      @current_server.mark_down!(@options[:server_retry_period]) if error
       @current_server.close
     end
 
@@ -146,7 +147,7 @@ class AbstractThriftClient
     rescue *@options[:exception_class_overrides] => e
       raise_or_default(e, method_name)
     rescue *@options[:exception_classes] => e
-      disconnect_on_error!
+      disconnect!(true)
       tries ||= (@options[:retry_overrides][method_name.to_sym] || @options[:retries]) + 1
       tries -= 1
       if tries > 0
@@ -174,11 +175,6 @@ class AbstractThriftClient
     else
       raise e
     end
-  end
-
-  def disconnect_on_error!
-    @current_server.mark_down!(@options[:server_retry_period]) if @current_server
-    disconnect!
   end
 
   def has_timeouts?

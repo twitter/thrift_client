@@ -48,8 +48,8 @@ class ThriftClientTest < Test::Unit::TestCase
 
       # disconnect_on_error! is called every time a server related
       # connection error happens. it will be called every try (so, retries + 1)
-      singleton_class.send :define_method, :disconnect_on_error! do |*args|
-        times_called += 1; super *args
+      singleton_class.send :define_method, :disconnect! do |*args|
+        times_called += 1 if args[0]; super *args
       end
 
       assert_raises(Greeter::Client::TransportException) { client.greeting("someone") }
