@@ -29,7 +29,8 @@ class AbstractThriftClient
     :wrapped_exception_classes => DEFAULT_WRAPPED_ERRORS,
     :connect_timeout => 0.1,
     :timeout => 1,
-    :timeout_overrides => {}
+    :timeout_overrides => {},
+    :cached_connections => false
   }
 
   attr_reader :client, :client_class, :current_server, :server_list, :options, :client_methods
@@ -38,7 +39,9 @@ class AbstractThriftClient
     @options = DEFAULTS.merge(options)
     @options[:server_retry_period] ||= 0
     @client_class = client_class
-    @server_list = Array(servers).collect{|s| Server.new(s)}.sort_by { rand }
+    @server_list = Array(servers).collect do |s|
+      Server.new(s, @options[:cache_connections])
+    end.sort_by { rand }
     @current_server = @server_list.first
 
     @callbacks = {}
