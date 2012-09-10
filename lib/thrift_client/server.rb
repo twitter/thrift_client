@@ -4,13 +4,15 @@ module ThriftHelpers
   class Server
     class ServerMarkedDown < StandardError; end
 
-    def initialize(connection_string)
+    def initialize(connection_string, cached = true)
       @connection_string = connection_string
       @connection = nil
+      @cached = cached
       @marked_down_til = nil
     end
 
     def mark_down!(til)
+      close(true)
       @marked_down_til = Time.now + til
     end
 
@@ -31,8 +33,10 @@ module ThriftHelpers
         raise ServerMarkedDown, "marked down until #{@marked_down_til}"
       end
 
-      @connection = Connection::Factory.create(trans, wrap, @connection_string, conn_timeout)
-      @connection.connect!
+      if @connection.nil? || (@cached && !@connection.open?)
+        @connection = Connection::Factory.create(trans, wrap, @connection_string, conn_timeout)
+        @connection.connect!
+      end
 
       if wrap || trans.respond_to?(:timeout=)
         timeout = trans_timeout
@@ -42,15 +46,18 @@ module ThriftHelpers
     end
 
     def open?
-      @connection.open?
+      @connection && @connection.open?
     end
 
-    def close
-      @connection.close rescue nil #TODO
-      @connection = nil
+    def close(teardown = false)
+      if teardown || !@cached
+        @connection.close rescue nil #TODO
+        @connection = nil
+      end
     end
 
     def transport
+      return nil unless @connection
       @connection.transport
     end
 

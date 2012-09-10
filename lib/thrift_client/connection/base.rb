@@ -14,6 +14,10 @@ module ThriftHelpers
         raise NotImplementedError
       end
 
+      def open?
+        @transport.open?
+      end
+
       def close
       end
     end
