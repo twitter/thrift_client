@@ -1,17 +1,7 @@
+require 'thrift_client/server'
+
 class AbstractThriftClient
-
-  class Server
-    attr_reader :connection_string, :marked_down_at
-
-    def initialize(connection_string)
-      @connection_string = connection_string
-    end
-    alias to_s connection_string
-
-    def mark_down!
-      @marked_down_at = Time.now
-    end
-  end
+  include ThriftHelpers
 
   DISCONNECT_ERRORS = [
     IOError,
@@ -101,9 +91,8 @@ class AbstractThriftClient
   # call.
   def connect!
     @current_server = next_live_server
-    @connection = Connection::Factory.create(@options[:transport], @options[:transport_wrapper], @current_server.connection_string, @options[:connect_timeout])
-    @connection.connect!
-    transport = @connection.transport
+    @current_server.open(@options[:transport], @options[:transport_wrapper], @options[:connect_timeout])
+    transport = @current_server.transport
     transport.timeout = @options[:timeout] if transport_can_timeout?
     @client = @client_class.new(@options[:protocol].new(transport, *@options[:protocol_extra_params]))
     do_callbacks(:post_connect, self)
@@ -113,7 +102,10 @@ class AbstractThriftClient
   end
 
   def disconnect!
-    @connection.close rescue nil #TODO
+    if @current_server
+      @current_server.close
+    end
+
     @client = nil
     @current_server = nil
     @request_count = 0
