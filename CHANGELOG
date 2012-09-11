@@ -1,3 +1,6 @@
+v0.8.2 Connect errors now mark servers down for _server_retry_period_.
+Added support for cached connections to amortize connection costs.
+
 v0.8.1 Fixed permissions?
 
 v0.8.0 Update to thrift 0.8.0
