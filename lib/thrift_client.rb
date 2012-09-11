@@ -24,6 +24,7 @@ Valid optional parameters are:
 <tt>:timeout</tt>:: Specify the default timeout in seconds. Defaults to <tt>1</tt>.
 <tt>:connect_timeout</tt>:: Specify the connection timeout in seconds. Defaults to <tt>0.1</tt>.
 <tt>:timeout_overrides</tt>:: Specify additional timeouts on a per-method basis, in seconds. Only works with <tt>Thrift::BufferedTransport</tt>.
+<tt>:cached_connections</tt>:: Cache connections between requests. Trades connect() costs for open sockets. Defaults to <tt>false</tt>.
 <tt>:defaults</tt>:: Specify default values to return on a per-method basis, if <tt>:raise</tt> is set to false.
 =end rdoc
 

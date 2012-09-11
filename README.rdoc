@@ -5,7 +5,7 @@ A Thrift client wrapper that encapsulates some common failover behavior.
 
 == License
 
-Copyright 2009 Twitter, Inc. See included LICENSE file.
+Copyright 2009-2012 Twitter, Inc. See included LICENSE file.
 
 The public certificate for this gem is here[http://blog.evanweaver.com/files/evan_weaver-original-public_cert.pem].
 
@@ -16,7 +16,7 @@ The public certificate for this gem is here[http://blog.evanweaver.com/files/eva
 * Ruby 1.9 compatibility
 * ThriftClient::Simple class, for working without generated bindings.
 
-The Github source repository is {here}[http://github.com/fauna/thrift_client/]. Patches and contributions are very welcome.
+The Github source repository is {here}[http://github.com/twitter/thrift_client/]. Patches and contributions are very welcome.
 
 == Usage
 
@@ -52,9 +52,9 @@ To contribute changes:
 
 1. Fork the project
 2. make your change, adding tests
-3. send a pull request to fauna and ryanking
+3. send a pull request to twitter and ryanking
 
 == Reporting problems
 
-The Github issue tracker is {here}[http://github.com/fauna/thrift_client/issues].
+The Github issue tracker is {here}[http://github.com/twitter/thrift_client/issues].
 
