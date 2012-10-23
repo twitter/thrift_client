@@ -47,7 +47,7 @@ class AbstractThriftClient
     @callbacks = {}
     @client_methods = []
     @client_class.instance_methods.each do |method_name|
-      if method_name != 'send_message' && method_name =~ /^send_(.*)$/
+      if method_name =~ /^send_(.*)$/ && method_name.to_s != 'send_message'
         instance_eval("def #{$1}(*args); handled_proxy(:'#{$1}', *args); end", __FILE__, __LINE__)
         @client_methods << $1
       end
