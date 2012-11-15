@@ -37,13 +37,17 @@ module ThriftHelpers
         @connection_string, @options[:connect_timeout])
     end
 
+    def connect!
+      return if open?
+
+      self.timeout = @options[:connect_timeout]
+      connection.connect!
+      self.timeout = @options[:timeout]
+    end
+
     def client
       @client ||= begin
-        connection.connect! unless open?
-
-        if transport.respond_to?(:timeout=)
-          transport.timeout = @options[:timeout]
-        end
+        connect!
 
         @client_class.new(
           @options[:protocol].new(self, *@options[:protocol_extra_params]))
@@ -92,7 +96,7 @@ module ThriftHelpers
       end
 
       def timeout=(timeout)
-        transport.timeout = timeout
+        transport.timeout = timeout if transport.respond_to?(:timeout=)
       end
 
       def timeout
