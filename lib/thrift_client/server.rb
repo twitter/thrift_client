@@ -4,10 +4,13 @@ module ThriftHelpers
   class Server
     class ServerMarkedDown < StandardError; end
 
-    def initialize(connection_string, cached = true)
+    def initialize(connection_string, client_class, options = {})
       @connection_string = connection_string
-      @connection = nil
-      @cached = cached
+      @client_class = client_class
+      @options = options
+
+      @cached = @options.has_key?(:cached_connections) ? @options[:cached_connections] : true
+
       @marked_down_til = nil
     end
 
@@ -28,37 +31,38 @@ module ThriftHelpers
       @connection_string
     end
 
-    def open(trans, wrap, conn_timeout, trans_timeout)
-      if down?
-        raise ServerMarkedDown, "marked down until #{@marked_down_til}"
-      end
+    def connection
+      @connection ||= Connection::Factory.create(
+        @options[:transport], @options[:transport_wrapper],
+        @connection_string, @options[:connect_timeout])
+    end
 
-      if @connection.nil? || (@cached && !@connection.open?)
-        @connection = Connection::Factory.create(trans, wrap, @connection_string, conn_timeout)
-        @connection.connect!
-      end
+    def client
+      @client ||= begin
+        connection.connect! unless open?
 
-      if wrap || trans.respond_to?(:timeout=)
-        timeout = trans_timeout
-      end
+        if transport.respond_to?(:timeout=)
+          transport.timeout = @options[:timeout]
+        end
 
-      self
+        @client_class.new(
+          @options[:protocol].new(self, *@options[:protocol_extra_params]))
+      end
     end
 
     def open?
-      @connection && @connection.open?
+      connection.open?
     end
 
     def close(teardown = false)
       if teardown || !@cached
-        @connection.close rescue nil #TODO
-        @connection = nil
+        connection.close if open?
+        @client = nil
       end
     end
 
     def transport
-      return nil unless @connection
-      @connection.transport
+      connection.transport
     end
 
     module TransportInterface

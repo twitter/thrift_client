@@ -247,22 +247,22 @@ class ThriftClientTest < Test::Unit::TestCase
   def test_server_max_requests_with_downed_servers
     client = ThriftClient.new(Greeter::Client, @servers, @options.merge(:server_max_requests => 2, :retries => 2))
     client.greeting("someone")
-    internal_client = client.client
+    last_client = client.last_client
     client.greeting("someone")
-    assert_equal internal_client, client.client
+    assert_equal last_client, client.last_client
 
     # This next call maxes out the requests for that "client" object
     # and moves on to the next.
     client.greeting("someone")
-    assert_not_equal internal_client, new_client = client.client
+    assert_not_equal last_client, new_client = client.last_client
 
     # And here we should still have the same client as the last one...
     client.greeting("someone")
-    assert_equal new_client, client.client
+    assert_equal new_client, client.last_client
 
     # Until we max it out, too.
     client.greeting("someone")
-    assert_not_equal internal_client, client.client
+    assert_not_equal last_client, client.last_client
   end
 
   private

@@ -1,14 +1,19 @@
 module ThriftHelpers
   module Connection
     class Socket < Base
+      def initialize(*args)
+        super *args
+
+        host, port = parse_server(@server)
+        @transport = @transport.new(host, port.to_i, @timeout)
+        @transport = @transport_wrapper.new(@transport) if @transport_wrapper
+      end
+
       def close
         @transport.close
       end
 
       def connect!
-        host, port = parse_server(@server)
-        @transport = @transport.new(*[host, port.to_i, @timeout])
-        @transport = @transport_wrapper.new(@transport) if @transport_wrapper
         @transport.open
       end
 
