@@ -33,15 +33,17 @@ class AbstractThriftClient
     :cached_connections => false
   }
 
-  attr_reader :client, :client_class, :current_server, :server_list, :options, :client_methods
+  attr_reader :last_client, :client, :client_class, :current_server, :server_list, :options, :client_methods
 
   def initialize(client_class, servers, options = {})
     @options = DEFAULTS.merge(options)
     @options[:server_retry_period] ||= 0
+
     @client_class = client_class
     @server_list = Array(servers).collect do |s|
-      Server.new(s, @options[:cached_connections])
+      Server.new(s, @client_class, @options)
     end.sort_by { rand }
+
     @current_server = @server_list.first
 
     @callbacks = {}
@@ -92,11 +94,8 @@ class AbstractThriftClient
   # call.
   def connect!
     @current_server = next_live_server
-    @current_server.open(@options[:transport],
-                         @options[:transport_wrapper],
-                         @options[:connect_timeout],
-                         @options[:timeout])
-    @client = @client_class.new(@options[:protocol].new(@current_server, *@options[:protocol_extra_params]))
+    @client = @current_server.client
+    @last_client = @client
     do_callbacks(:post_connect, self)
   rescue IOError, Thrift::TransportException
     disconnect!(true)
@@ -137,7 +136,6 @@ class AbstractThriftClient
   end
 
   def handled_proxy(method_name, *args)
-    disconnect! if @options[:server_max_requests] && @request_count >= @options[:server_max_requests]
     begin
       connect! unless @client
       if has_timeouts?
@@ -159,6 +157,8 @@ class AbstractThriftClient
       end
     rescue Exception => e
       raise_or_default(e, method_name)
+    ensure
+      disconnect! if @options[:server_max_requests] && @request_count >= @options[:server_max_requests]
     end
   end
 
