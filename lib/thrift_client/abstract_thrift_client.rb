@@ -135,6 +135,19 @@ class AbstractThriftClient
     raise ThriftClient::NoServersAvailable, "No live servers in #{@server_list.inspect}."
   end
 
+  def ensure_socket_alignment
+    incomplete = true
+    result = yield
+    incomplete = false
+    result
+  # Thrift exceptions get read off the wire. We can consider them complete requests
+  rescue Thrift::Exception => e
+    incomplete = false
+    raise e
+  ensure
+    disconnect! if incomplete
+  end
+
   def handled_proxy(method_name, *args)
     begin
       connect! unless @client
@@ -143,7 +156,7 @@ class AbstractThriftClient
       end
       @request_count += 1
       do_callbacks(:before_method, method_name)
-      @client.send(method_name, *args)
+      ensure_socket_alignment { @client.send(method_name, *args) }
     rescue *@options[:exception_class_overrides] => e
       raise_or_default(e, method_name)
     rescue *@options[:exception_classes] => e
