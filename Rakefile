@@ -1,14 +1,14 @@
-
 require 'rubygems'
-require 'echoe'
+require 'rake/testtask'
 
-Echoe.new("thrift_client") do |p|
-  p.author = ["Evan Weaver", "Ryan King", "Jeff Hodges"]
-  p.project = "fauna"
-  p.summary = "A Thrift client wrapper that encapsulates some common failover behavior."
-  p.rubygems_version = ">= 0.8"
-  p.dependencies = ['thrift ~>0.8.0']
-  p.ignore_pattern = /^(vendor\/thrift)/
-  p.rdoc_pattern = /^(lib|bin|tasks|ext)|^README|^CHANGELOG|^TODO|^LICENSE|^COPYING$/
-  p.spec_pattern = "spec/*_spec.rb"
+Rake::TestTask.new(:test) do |test|
+  test.libs << 'lib' << 'test'
+  test.pattern = 'test/**/*_test.rb'
+  test.verbose = true
 end
+
+task :build do
+  `gem build thrift_client.gemspec`
+end
+
+task :default => :test
