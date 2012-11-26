@@ -1,3 +1,6 @@
+v0.8.3 reduce object churn
+guard against socket misalignment errors
+
 v0.8.2 Connect errors now mark servers down for _server_retry_period_.
 Added support for cached connections to amortize connection costs.
 
