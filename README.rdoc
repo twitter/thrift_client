@@ -1,13 +1,6 @@
-
-thrift_client
+== thrift_client {<img src="https://travis-ci.org/twitter/thrift_client.png" />}[https://travis-ci.org/twitter/thrift_client]
 
 A Thrift client wrapper that encapsulates some common failover behavior.
-
-== License
-
-Copyright 2009-2012 Twitter, Inc. See included LICENSE file.
-
-The public certificate for this gem is here[http://blog.evanweaver.com/files/evan_weaver-original-public_cert.pem].
 
 == Features
 
@@ -58,3 +51,8 @@ To contribute changes:
 
 The Github issue tracker is {here}[http://github.com/twitter/thrift_client/issues].
 
+== License
+
+Copyright 2009-2012 Twitter, Inc. See included LICENSE file.
+
+The public certificate for this gem is here[http://blog.evanweaver.com/files/evan_weaver-original-public_cert.pem].
