@@ -230,13 +230,6 @@ class ThriftClientTest < Test::Unit::TestCase
     assert_raises(ThriftClient::NoServersAvailable) { client.greeting("someone") }
   end
 
-  def test_client_with_retry_period_drops_servers
-    client = ThriftClient.new(Greeter::Client, @servers[0,2], @options.merge(:server_retry_period => 1, :retries => 2))
-    assert_raises(ThriftClient::NoServersAvailable) { client.greeting("someone") }
-    sleep 1.1
-    assert_raises(ThriftClient::NoServersAvailable) { client.greeting("someone") }
-  end
-
   def test_oneway_method
     client = ThriftClient.new(Greeter::Client, @servers, @options.merge(:server_max_requests => 2, :retries => 2))
     assert_nothing_raised do

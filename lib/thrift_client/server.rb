@@ -12,6 +12,8 @@ module ThriftHelpers
       @cached = @options.has_key?(:cached_connections) ? @options[:cached_connections] : true
 
       @marked_down_til = nil
+
+      @errors = 0
     end
 
     def mark_down!(til)
@@ -59,6 +61,7 @@ module ThriftHelpers
     end
 
     def close(teardown = false)
+      @errors += 1 if teardown
       if teardown || !@cached
         connection.close if open?
         @client = nil
