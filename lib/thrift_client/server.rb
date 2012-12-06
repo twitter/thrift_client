@@ -30,8 +30,9 @@ module ThriftHelpers
     end
 
     def to_s
-      @connection_string
+      "#{@connection_string}:#{up? ? 'up' : 'down'}"
     end
+    alias_method :inspect, :to_s
 
     def connection
       @connection ||= Connection::Factory.create(
