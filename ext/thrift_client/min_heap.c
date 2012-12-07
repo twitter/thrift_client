@@ -22,17 +22,17 @@ typedef struct node {
   double load;
   long int samples;
   int weight;
-} node_t;
+} tc_node_t;
 
 typedef struct heap {
   int size;
   VALUE is_available;
   int cur_index;
-  node_t *nodes;
-} heap_t;
+  tc_node_t *nodes;
+} tc_heap_t;
 
-static void _fix_down(heap_t *, int, int);
-static node_t *_get(heap_t *, int);
+static void _fix_down(tc_heap_t *, int, int);
+static tc_node_t *_get(tc_heap_t *, int);
 
 static void *
 zalloc(size_t size)
@@ -49,7 +49,7 @@ zalloc(size_t size)
 }
 
 static int
-compare(heap_t *heap, node_t *i, node_t *j)
+compare(tc_heap_t *heap, tc_node_t *i, tc_node_t *j)
 {
   int i_avail = is_available(heap, i);
   int j_avail = is_available(heap, j);
@@ -64,9 +64,9 @@ compare(heap_t *heap, node_t *i, node_t *j)
 }
 
 static inline void
-swap(heap_t *heap, int i, int j)
+swap(tc_heap_t *heap, int i, int j)
 {
-  node_t tmp = heap->nodes[i];
+  tc_node_t tmp = heap->nodes[i];
   heap->nodes[i] = heap->nodes[j];
   heap->nodes[j] = tmp;
   heap->nodes[i].index = i;
@@ -74,7 +74,7 @@ swap(heap_t *heap, int i, int j)
 }
 
 static void
-heap_mark(heap_t *heap)
+heap_mark(tc_heap_t *heap)
 {
   if (heap == NULL)
     return;
@@ -82,14 +82,14 @@ heap_mark(heap_t *heap)
   rb_gc_mark(heap->is_available);
 
   if (heap->nodes != NULL) {
-    node_t *node = &heap->nodes[1];
+    tc_node_t *node = &heap->nodes[1];
     for (int i = 1; i <= heap->size; i++, node++)
       rb_gc_mark(node->obj);
   }
 }
 
 static void
-heap_free(heap_t *heap)
+heap_free(tc_heap_t *heap)
 {
   if (heap == NULL)
     return;
@@ -103,14 +103,14 @@ heap_free(heap_t *heap)
 static VALUE
 heap_checkout(VALUE self)
 {
-  heap_t *heap;
-  Data_Get_Struct(self, heap_t, heap);
+  tc_heap_t *heap;
+  Data_Get_Struct(self, tc_heap_t, heap);
 
   if (heap->cur_index > 0)
     rb_raise(rb_eRuntimeError, "You must check an item in before checking a new one out");
 
   // Use this when we need to check node liveness
-  node_t *node = _get(heap, 1);
+  tc_node_t *node = _get(heap, 1);
   VALUE obj = is_available(heap, node) ? node->obj : Qnil;
 
   if (obj != Qnil)
@@ -120,14 +120,14 @@ heap_checkout(VALUE self)
 }
 
 /* This will be useful when we can check the liveness of nodes */
-static node_t *
-_get(heap_t *heap, int i)
+static tc_node_t *
+_get(tc_heap_t *heap, int i)
 {
   assert(heap != NULL);
   assert(i > 0);
   assert(i <= heap->size);
 
-  node_t *node = &heap->nodes[i];
+  tc_node_t *node = &heap->nodes[i];
 
   if (is_available(heap, node) || heap->size < i*2) {
 
@@ -135,8 +135,8 @@ _get(heap_t *heap, int i)
     node = _get(heap, i*2);
 
   } else {
-    node_t *left = _get(heap, i*2);
-    node_t *right = _get(heap, i*2+1);
+    tc_node_t *left = _get(heap, i*2);
+    tc_node_t *right = _get(heap, i*2+1);
     node = compare(heap, left, right) ? left : right;
   }
 
@@ -146,13 +146,13 @@ _get(heap_t *heap, int i)
 static VALUE
 heap_checkin(VALUE self)
 {
-  heap_t *heap;
-  Data_Get_Struct(self, heap_t, heap);
+  tc_heap_t *heap;
+  Data_Get_Struct(self, tc_heap_t, heap);
 
   if (heap->cur_index == 0)
     return self;
 
-  node_t *node = &heap->nodes[heap->cur_index];
+  tc_node_t *node = &heap->nodes[heap->cur_index];
   heap->cur_index = 0;
   _fix_down(heap, node->index, heap->size);
 
@@ -162,14 +162,14 @@ heap_checkin(VALUE self)
 static VALUE
 heap_add_sample(VALUE self, VALUE sample)
 {
-  heap_t *heap;
-  Data_Get_Struct(self, heap_t, heap);
+  tc_heap_t *heap;
+  Data_Get_Struct(self, tc_heap_t, heap);
 
   // assume we can't check out more than one item at a time
   if (heap->cur_index == 0)
     return self;
 
-  node_t *node = &heap->nodes[heap->cur_index];
+  tc_node_t *node = &heap->nodes[heap->cur_index];
   node->samples++;
 
   int weight = node->weight;
@@ -182,7 +182,7 @@ heap_add_sample(VALUE self, VALUE sample)
 }
 
 static void
-_fix_down(heap_t *heap, int i, int j)
+_fix_down(tc_heap_t *heap, int i, int j)
 {
   assert(heap != NULL);
 
@@ -205,8 +205,8 @@ heap_initialize(VALUE self, VALUE w, VALUE items)
   if (weight < 0 || weight > 100)
     rb_raise(rb_eRuntimeError, "Weight must be between 0 and 100");
 
-  heap_t *heap;
-  Data_Get_Struct(self, heap_t, heap);
+  tc_heap_t *heap;
+  Data_Get_Struct(self, tc_heap_t, heap);
 
   long int size = RARRAY_LEN(items);
   VALUE *item = RARRAY_PTR(items);
@@ -218,7 +218,7 @@ heap_initialize(VALUE self, VALUE w, VALUE items)
   if (rb_block_given_p())
     heap->is_available = rb_block_proc();
 
-  node_t *node = zalloc(sizeof(node_t) * (heap->size + 1));
+  tc_node_t *node = zalloc(sizeof(tc_node_t) * (heap->size + 1));
   if (node == NULL)
     rb_raise(rb_eRuntimeError, "Unable to initialize heap.");
 
@@ -240,18 +240,18 @@ heap_initialize(VALUE self, VALUE w, VALUE items)
 static VALUE
 heap_alloc(VALUE klass)
 {
-  return Data_Wrap_Struct(klass, heap_mark, heap_free, zalloc(sizeof(heap_t)));
+  return Data_Wrap_Struct(klass, heap_mark, heap_free, zalloc(sizeof(tc_heap_t)));
 }
 
 static VALUE
 heap_current_state(VALUE self)
 {
-  heap_t *heap;
-  Data_Get_Struct(self, heap_t, heap);
+  tc_heap_t *heap;
+  Data_Get_Struct(self, tc_heap_t, heap);
 
   VALUE ary = rb_ary_new2(heap->size);
   VALUE sub_ary;
-  node_t *node = &heap->nodes[1];
+  tc_node_t *node = &heap->nodes[1];
   for (int i = 1; i <= heap->size; i++, node++) {
     sub_ary = rb_ary_new3(4,
         node->obj,
