@@ -1,8 +1,11 @@
 #include <assert.h>
+#include <errno.h>
 #include <ruby.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
 
 #define THRESHOLD 100
 
@@ -16,15 +19,15 @@
 static ID id_call;
 static ID id_inspect;
 
-typedef struct node {
+typedef struct {
   VALUE obj;
   int index;
   double load;
-  long int samples;
+  long samples;
   int weight;
 } tc_node_t;
 
-typedef struct heap {
+typedef struct {
   int size;
   VALUE is_available;
   int cur_index;
@@ -48,17 +51,17 @@ zalloc(size_t size)
   return p;
 }
 
-static int
+static bool
 compare(tc_heap_t *heap, tc_node_t *i, tc_node_t *j)
 {
-  int i_avail = is_available(heap, i);
-  int j_avail = is_available(heap, j);
+  bool i_avail = is_available(heap, i);
+  bool j_avail = is_available(heap, j);
 
   if (i_avail && !j_avail)
-    return 1;
+    return true;
 
   if (!i_avail && j_avail)
-    return 0;
+    return false;
 
   return i->load < j->load;
 }
@@ -82,8 +85,9 @@ heap_mark(tc_heap_t *heap)
   rb_gc_mark(heap->is_available);
 
   if (heap->nodes != NULL) {
+    // index 0 is a placeholder
     tc_node_t *node = &heap->nodes[1];
-    for (int i = 1; i <= heap->size; i++, node++)
+    for (int i = 0; i <= heap->size; i++, node++)
       rb_gc_mark(node->obj);
   }
 }
@@ -202,13 +206,15 @@ heap_initialize(VALUE self, VALUE w, VALUE items)
   assert(TYPE(items) == T_ARRAY);
 
   int weight = FIX2INT(w);
-  if (weight < 0 || weight > 100)
-    rb_raise(rb_eRuntimeError, "Weight must be between 0 and 100");
+  if (weight < 0 || weight > 100) {
+    errno = ERANGE;
+    rb_sys_fail("Weight must be between 0 and 100");
+  }
 
   tc_heap_t *heap;
   Data_Get_Struct(self, tc_heap_t, heap);
 
-  long int size = RARRAY_LEN(items);
+  long size = RARRAY_LEN(items);
   VALUE *item = RARRAY_PTR(items);
 
   heap->size = size;
@@ -218,13 +224,13 @@ heap_initialize(VALUE self, VALUE w, VALUE items)
   if (rb_block_given_p())
     heap->is_available = rb_block_proc();
 
-  tc_node_t *node = zalloc(sizeof(tc_node_t) * (heap->size + 1));
+  tc_node_t *node = calloc(heap->size + 1, sizeof(tc_node_t));
   if (node == NULL)
     rb_raise(rb_eRuntimeError, "Unable to initialize heap.");
 
   heap->nodes = node;
 
-  for (long int i = 0; i < size; i++) {
+  for (long i = 0; i < size; i++) {
     node++; // index 0 is a placeholder
 
     node->index = i + 1;
