@@ -87,7 +87,7 @@ heap_mark(tc_heap_t *heap)
   if (heap->nodes != NULL) {
     // index 0 is a placeholder
     tc_node_t *node = &heap->nodes[1];
-    for (int i = 0; i <= heap->size; i++, node++)
+    for (int i = 0; i < heap->size; i++, node++)
       rb_gc_mark(node->obj);
   }
 }
