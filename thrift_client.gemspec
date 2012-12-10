@@ -11,8 +11,10 @@ Gem::Specification.new do |s|
   s.homepage      = "https://github.com/twitter/thrift_client"
   s.summary       = "A Thrift client wrapper that encapsulates some common failover behavior."
 
-  s.files         = Dir["lib/**/*.rb"].to_a
+  s.files         = Dir.glob('lib/**/*.rb') +
+                    Dir.glob('ext/**/*.{c,h,rb}')
   s.test_files    = Dir["test/**/*.rb"].to_a
+  s.extensions    = ['ext/thrift_client/extconf.rb']
 
   s.require_paths = ["lib"]
 

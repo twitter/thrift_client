@@ -23,7 +23,7 @@ class ThriftClientTest < Test::Unit::TestCase
 
   def test_inspect
     client = ThriftClient.new(Greeter::Client, @servers.last, @options)
-    assert_equal "<ThriftClient(Greeter::Client) @current_server=127.0.0.1:1463>", client.inspect
+    assert_equal "<ThriftClient(Greeter::Client) @current_server=127.0.0.1:1463:up>", client.inspect
   end
 
   def test_live_server
@@ -224,13 +224,6 @@ class ThriftClientTest < Test::Unit::TestCase
   end
 
   def test_retry_period
-    client = ThriftClient.new(Greeter::Client, @servers[0,2], @options.merge(:server_retry_period => 1, :retries => 2))
-    assert_raises(ThriftClient::NoServersAvailable) { client.greeting("someone") }
-    sleep 1.1
-    assert_raises(ThriftClient::NoServersAvailable) { client.greeting("someone") }
-  end
-
-  def test_client_with_retry_period_drops_servers
     client = ThriftClient.new(Greeter::Client, @servers[0,2], @options.merge(:server_retry_period => 1, :retries => 2))
     assert_raises(ThriftClient::NoServersAvailable) { client.greeting("someone") }
     sleep 1.1

@@ -40,11 +40,13 @@ class AbstractThriftClient
     @options[:server_retry_period] ||= 0
 
     @client_class = client_class
-    @server_list = Array(servers).collect do |s|
+
+    servers = Array(servers).collect do |s|
       Server.new(s, @client_class, @options)
     end.sort_by { rand }
+    @server_list = MinHeap.new(10, servers) { |s| s.up? }
 
-    @current_server = @server_list.first
+    @current_server = @server_list.checkout
 
     @callbacks = {}
     @client_methods = []
@@ -93,7 +95,8 @@ class AbstractThriftClient
   # called as the connection will be made on the first RPC method
   # call.
   def connect!
-    @current_server = next_live_server
+    @current_server ||= @server_list.checkout ||
+      raise(ThriftClient::NoServersAvailable.new("No live servers in #{@server_list.inspect}."))
     @client = @current_server.client
     @last_client = @client
     do_callbacks(:post_connect, self)
@@ -103,6 +106,8 @@ class AbstractThriftClient
   end
 
   def disconnect!(error = false)
+    @server_list.checkin
+
     if @current_server
       @current_server.mark_down!(@options[:server_retry_period]) if error
       @current_server.close
@@ -121,18 +126,6 @@ class AbstractThriftClient
     @callbacks[callback_type_sym].each do |callback|
       callback.call(*args)
     end
-  end
-
-  def next_live_server
-    @server_index ||= 0
-    @server_list.length.times do |i|
-      cur = (1 + @server_index + i) % @server_list.length
-      if @server_list[cur].up?
-        @server_index = cur
-        return @server_list[cur]
-      end
-    end
-    raise ThriftClient::NoServersAvailable, "No live servers in #{@server_list.inspect}."
   end
 
   def ensure_socket_alignment
@@ -156,7 +149,14 @@ class AbstractThriftClient
       end
       @request_count += 1
       do_callbacks(:before_method, method_name)
-      ensure_socket_alignment { @client.send(method_name, *args) }
+      ensure_socket_alignment do
+        begin
+          start = Time.now
+          @client.send(method_name, *args)
+        ensure
+          @server_list.add_sample(((Time.now - start) * 1000.0).to_i)
+        end
+      end
     rescue *@options[:exception_class_overrides] => e
       raise_or_default(e, method_name)
     rescue *@options[:exception_classes] => e

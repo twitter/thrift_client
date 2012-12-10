@@ -1,6 +1,7 @@
 require 'thrift'
 require 'thrift_client/thrift'
 require 'thrift_client/server'
+require 'thrift_client/min_heap'
 require 'thrift_client/abstract_thrift_client'
 
 class ThriftClient < AbstractThriftClient
