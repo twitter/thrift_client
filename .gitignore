@@ -4,3 +4,4 @@ Makefile
 *.bundle
 *.o
 *.gem
+*.so
