@@ -1,3 +1,5 @@
+v0.9.0 upgrade to thrift 0.9.0
+
 v0.8.3 reduce object churn
 guard against socket misalignment errors
 
