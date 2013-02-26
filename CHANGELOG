@@ -1,3 +1,5 @@
+v0.8.4 fix infinite retry bug
+
 v0.8.3 reduce object churn
 guard against socket misalignment errors
 
