@@ -92,7 +92,7 @@ class AbstractThriftClient
   # Force the client to connect to the server. Not necessary to be
   # called as the connection will be made on the first RPC method
   # call.
-  def connect!
+  def connect!(method = nil)
     start_time ||= Time.now
     @current_server = next_live_server
     @client = @current_server.client
@@ -100,7 +100,8 @@ class AbstractThriftClient
     do_callbacks(:post_connect, self)
   rescue IOError, Thrift::TransportException
     disconnect!(true)
-    if @options[:timeout] && Time.now - start_time > @options[:timeout]
+    timeout = timeout(method)
+    if timeout && Time.now - start_time > timeout
       no_servers_available!
     else
       retry
@@ -155,9 +156,9 @@ class AbstractThriftClient
 
   def handled_proxy(method_name, *args)
     begin
-      connect! unless @client
+      connect!(method_name.to_sym) unless @client
       if has_timeouts?
-        @client.timeout = @options[:timeout_overrides][method_name.to_sym] || @options[:timeout]
+        @client.timeout = timeout(method_name.to_sym)
       end
       @request_count += 1
       do_callbacks(:before_method, method_name)
@@ -199,6 +200,10 @@ class AbstractThriftClient
 
   def has_timeouts?
     @has_timeouts ||= @options[:timeout_overrides].any? && transport_can_timeout?
+  end
+
+  def timeout(method = nil)
+    @options[:timeout_overrides][method] || @options[:timeout]
   end
 
   def transport_can_timeout?
