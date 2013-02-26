@@ -92,14 +92,20 @@ class AbstractThriftClient
   # Force the client to connect to the server. Not necessary to be
   # called as the connection will be made on the first RPC method
   # call.
-  def connect!
+  def connect!(method = nil)
+    start_time ||= Time.now
     @current_server = next_live_server
     @client = @current_server.client
     @last_client = @client
     do_callbacks(:post_connect, self)
   rescue IOError, Thrift::TransportException
     disconnect!(true)
-    retry
+    timeout = timeout(method)
+    if timeout && Time.now - start_time > timeout
+      no_servers_available!
+    else
+      retry
+    end
   end
 
   def disconnect!(error = false)
@@ -132,7 +138,7 @@ class AbstractThriftClient
         return @server_list[cur]
       end
     end
-    raise ThriftClient::NoServersAvailable, "No live servers in #{@server_list.inspect}."
+    no_servers_available!
   end
 
   def ensure_socket_alignment
@@ -150,9 +156,9 @@ class AbstractThriftClient
 
   def handled_proxy(method_name, *args)
     begin
-      connect! unless @client
+      connect!(method_name.to_sym) unless @client
       if has_timeouts?
-        @client.timeout = @options[:timeout_overrides][method_name.to_sym] || @options[:timeout]
+        @client.timeout = timeout(method_name.to_sym)
       end
       @request_count += 1
       do_callbacks(:before_method, method_name)
@@ -196,6 +202,10 @@ class AbstractThriftClient
     @has_timeouts ||= @options[:timeout_overrides].any? && transport_can_timeout?
   end
 
+  def timeout(method = nil)
+    @options[:timeout_overrides][method] || @options[:timeout]
+  end
+
   def transport_can_timeout?
     if (@options[:transport_wrapper] || @options[:transport]).method_defined?(:timeout=)
       true
@@ -203,5 +213,9 @@ class AbstractThriftClient
       warn "ThriftClient: Timeout overrides have no effect with with transport type #{(@options[:transport_wrapper] || @options[:transport])}"
       false
     end
+  end
+
+  def no_servers_available!
+    raise ThriftClient::NoServersAvailable, "No live servers in #{@server_list.inspect}."
   end
 end
