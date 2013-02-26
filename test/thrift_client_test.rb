@@ -230,6 +230,11 @@ class ThriftClientTest < Test::Unit::TestCase
     assert_raises(ThriftClient::NoServersAvailable) { client.greeting("someone") }
   end
 
+  def test_connect_retry_period
+    client = ThriftClient.new(Greeter::Client, @servers[0], @options.merge(:server_retry_period => 0))
+    assert_raises(ThriftClient::NoServersAvailable) { client.connect! }
+  end
+
   def test_client_with_retry_period_drops_servers
     client = ThriftClient.new(Greeter::Client, @servers[0,2], @options.merge(:server_retry_period => 1, :retries => 2))
     assert_raises(ThriftClient::NoServersAvailable) { client.greeting("someone") }
