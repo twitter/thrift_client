@@ -93,13 +93,18 @@ class AbstractThriftClient
   # called as the connection will be made on the first RPC method
   # call.
   def connect!
+    start_time ||= Time.now
     @current_server = next_live_server
     @client = @current_server.client
     @last_client = @client
     do_callbacks(:post_connect, self)
   rescue IOError, Thrift::TransportException
     disconnect!(true)
-    retry
+    if @options[:timeout] && Time.now - start_time > @options[:timeout]
+      no_servers_available!
+    else
+      retry
+    end
   end
 
   def disconnect!(error = false)
@@ -132,7 +137,7 @@ class AbstractThriftClient
         return @server_list[cur]
       end
     end
-    raise ThriftClient::NoServersAvailable, "No live servers in #{@server_list.inspect}."
+    no_servers_available!
   end
 
   def ensure_socket_alignment
@@ -203,5 +208,9 @@ class AbstractThriftClient
       warn "ThriftClient: Timeout overrides have no effect with with transport type #{(@options[:transport_wrapper] || @options[:transport])}"
       false
     end
+  end
+
+  def no_servers_available!
+    raise ThriftClient::NoServersAvailable, "No live servers in #{@server_list.inspect}."
   end
 end
