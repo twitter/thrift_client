@@ -216,6 +216,7 @@ class AbstractThriftClient
   end
 
   def no_servers_available!
-    raise ThriftClient::NoServersAvailable, "No live servers in #{@server_list.inspect}."
+    servers = @server_list.map { |s| s.to_s }.join(',')
+    raise ThriftClient::NoServersAvailable, "No live servers in [#{servers}]."
   end
 end
