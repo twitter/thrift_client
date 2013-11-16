@@ -226,7 +226,8 @@ class AbstractThriftClient
       #this is OK because we intend to immediately re-raise an exception
     end
     if errors.any?
-      raise ThriftClient::TransportError, "No live servers in #{@server_list.inspect}."
+      raise ThriftClient::TransportError, errors[0] unless errors.count > 1
+      raise ThriftClient::TransportError, errors.inspect
     end
     raise ThriftClient::NoServersAvailable, "No live servers in #{@server_list.inspect}."
   end
