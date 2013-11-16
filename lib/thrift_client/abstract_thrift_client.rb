@@ -216,6 +216,18 @@ class AbstractThriftClient
   end
 
   def no_servers_available!
+    errors = []
+    begin
+      @server_list.collect { |srv|
+        error_msg = srv.connection.transport.instance_variable_get(:@rbuf).force_encoding("ASCII-8BIT").gsub("\f", ' ').scan(/[[:print:]]/).join
+        errors << "Error on server #{srv} : #{error_msg}"
+      }
+    rescue
+      #this is OK because we intend to immediately re-raise an exception
+    end
+    if errors.any?
+      raise ThriftClient::TransportError, "No live servers in #{@server_list.inspect}."
+    end
     raise ThriftClient::NoServersAvailable, "No live servers in #{@server_list.inspect}."
   end
 end
