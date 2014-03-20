@@ -26,6 +26,13 @@ class ThriftClientTest < Test::Unit::TestCase
     assert_equal "<ThriftClient(Greeter::Client) @current_server=127.0.0.1:1463>", client.inspect
   end
 
+  def test_create_wrapped_exception_classes
+    client = Module.new
+    ThriftClient.create_wrapped_exception_classes(client, [Thrift::TransportException])
+    assert client.const_defined?(:TransportException)
+    assert client.const_get(:TransportException).new.is_a?(Thrift::TransportException)
+  end
+
   def test_live_server
     assert_nothing_raised do
       ThriftClient.new(Greeter::Client, @servers.last, @options).greeting("someone")

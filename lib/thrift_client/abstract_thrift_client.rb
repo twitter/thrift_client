@@ -35,6 +35,17 @@ class AbstractThriftClient
 
   attr_reader :last_client, :client, :client_class, :current_server, :server_list, :options, :client_methods
 
+  def self.create_wrapped_exception_classes(client_class, wrapped_exception_classes = DEFAULT_WRAPPED_ERRORS)
+    wrapped_exception_classes.map do |exception_klass|
+      name = exception_klass.to_s.split('::').last
+      begin
+        client_class.const_get(name)
+      rescue NameError
+        client_class.const_set(name, Class.new(exception_klass))
+      end
+    end
+  end
+
   def initialize(client_class, servers, options = {})
     @options = DEFAULTS.merge(options)
     @options[:server_retry_period] ||= 0
@@ -55,14 +66,7 @@ class AbstractThriftClient
       end
     end
     @request_count = 0
-    @options[:wrapped_exception_classes].each do |exception_klass|
-      name = exception_klass.to_s.split('::').last
-      begin
-        @client_class.const_get(name)
-      rescue NameError
-        @client_class.const_set(name, Class.new(exception_klass))
-      end
-    end
+    self.class.create_wrapped_exception_classes(@client_class, @options[:wrapped_exception_classes])
   end
 
   # Adds a callback that will be invoked at a certain time. The valid callback types are:
