@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
   s.authors       = ["Evan Weaver", "Ryan King", "Jeff Hodges"]
   s.homepage      = "https://github.com/twitter/thrift_client"
   s.summary       = "A Thrift client wrapper that encapsulates some common failover behavior."
+  s.license       = "Apache 2.0"
 
   s.files         = Dir["lib/**/*.rb"].to_a
   s.test_files    = Dir["test/**/*.rb"].to_a
