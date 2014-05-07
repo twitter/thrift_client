@@ -33,8 +33,8 @@ module Greeter
       uri = URI.parse(uri)
       handler = Greeter::Handler.new
       processor = Greeter::Processor.new(handler)
-      path = uri.path[1..-1]
-      @server = Thrift::MongrelHTTPServer.new(processor, :port => uri.port, :ip => uri.host, :path => path)
+      path = uri.path
+      @server = Thrift::ThinHTTPServer.new(processor, :port => uri.port, :ip => uri.host, :path => path)
     end
 
     def serve

@@ -1,5 +1,4 @@
 require File.expand_path('test_helper.rb', File.dirname(__FILE__))
-require "thrift/server/mongrel_http_server"
 
 class ThriftClientHTTPTest < Test::Unit::TestCase
 
@@ -14,7 +13,7 @@ class ThriftClientHTTPTest < Test::Unit::TestCase
     end
     # Need to give the child process a moment to open the listening socket or
     # we get occasional "could not connect" errors in tests.
-    sleep 0.05
+    sleep 0.20
   end
 
   def teardown
