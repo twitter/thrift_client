@@ -277,6 +277,11 @@ class ThriftClientTest < Test::Unit::TestCase
     assert_not_equal last_client, client.last_client
   end
 
+  def test_wrapper_should_not_generate_message_method
+    client = ThriftClient.new(Greeter::Client, @servers.last, @options)
+    assert !client.respond_to?(:message)
+  end
+
   private
 
   def stub_server(port)
