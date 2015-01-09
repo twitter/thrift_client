@@ -134,15 +134,7 @@ class AbstractThriftClient
   end
 
   def next_live_server
-    @server_index ||= 0
-    @server_list.length.times do |i|
-      cur = (1 + @server_index + i) % @server_list.length
-      if @server_list[cur].up?
-        @server_index = cur
-        return @server_list[cur]
-      end
-    end
-    no_servers_available!
+    @server_list.detect { |server| server.up? } || no_servers_available!
   end
 
   def ensure_socket_alignment
@@ -170,13 +162,20 @@ class AbstractThriftClient
     rescue *@options[:exception_class_overrides] => e
       raise_or_default(e, method_name)
     rescue *@options[:exception_classes] => e
-      disconnect!(true)
       tries ||= (@options[:retry_overrides][method_name.to_sym] || @options[:retries]) + 1
       tries -= 1
+
       if tries > 0
+        # We disconnect with false to avoid marking the connection
+        # as unavailable
+        disconnect!(false)
         retry
       else
-        raise_or_default(e, method_name)
+        @client.connect!
+        # Disconnecting with 'true' will mark the server as down
+        # and eventually the list of servers will be marked as down and
+        # raise the NoServersAvailable Exception
+        @client.open? ? raise_or_default(e, method_name) : disconnect!(true)
       end
     rescue Exception => e
       raise_or_default(e, method_name)
