@@ -173,11 +173,15 @@ class AbstractThriftClient
       disconnect!(true)
       tries ||= (@options[:retry_overrides][method_name.to_sym] || @options[:retries]) + 1
       tries -= 1
+      my_e = e
       if tries > 0
         retry
       else
         raise_or_default(e, method_name)
       end
+    rescue ThriftClient::NoServersAvailable => e
+      raise_or_default(my_e, method_name) if my_e
+      raise_or_default(e, method_name)
     rescue Exception => e
       raise_or_default(e, method_name)
     ensure
