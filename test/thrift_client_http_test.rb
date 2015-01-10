@@ -13,7 +13,14 @@ class ThriftClientHTTPTest < Test::Unit::TestCase
     end
     # Need to give the child process a moment to open the listening socket or
     # we get occasional "could not connect" errors in tests.
-    sleep 0.20
+    100.times do
+      begin
+        sleep 0.05
+        Net::HTTP.get(URI(@servers.last))
+        break
+      rescue
+      end
+    end
   end
 
   def teardown
