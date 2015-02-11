@@ -161,6 +161,20 @@ class ThriftClientTest < Test::Unit::TestCase
     assert_equal(2, calledcnt)
   end
 
+   def test_user_defined_exception_without_retries
+    client = ThriftClient.new(Greeter::Client, @servers.last, @options.merge(:retries => 0))
+    assert_raises(OopsException) do
+      client.oops()
+    end
+   end
+
+  def test_user_defined_exception_with_retries
+    client = ThriftClient.new(Greeter::Client, @servers.last, @options.merge(:retries => 1))
+    assert_raises(OopsException) do
+      client.oops()
+    end
+  end
+
   def test_no_servers_eventually_raise
     wascalled = false
     client = ThriftClient.new(Greeter::Client, @servers[0,2], @options.merge(:retries => 2))
