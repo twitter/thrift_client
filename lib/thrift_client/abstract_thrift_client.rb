@@ -3,7 +3,14 @@ class AbstractThriftClient
 
   DISCONNECT_ERRORS = [
     IOError,
-    Thrift::Exception,
+    # The thrift ruby code generator has user-defined thrift exceptions
+    # derive directly from the same base class - Thrift::Exception - that
+    # it uses for thrift protocol errors.
+    # This means that we have to explicitly whitelist all thrift protocol
+    # error subclasses of Thrift::Exception here to avoid catching and
+    # treating user-defined thrift exceptions as protocol errors.
+    Thrift::TypeError,
+    Thrift::ProtocolException,
     Thrift::ApplicationException,
     Thrift::TransportException
   ]

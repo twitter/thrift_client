@@ -7,6 +7,10 @@ module Greeter
     def yo(name)
       #whee
     end
+
+    def oops()
+      raise OopsException
+    end
   end
 
   class Server
