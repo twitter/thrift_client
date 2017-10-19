@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency("thrift", ["~> 0.10.0"])
 
+  s.add_development_dependency('rack', ["~> 1.6.8"])
   s.add_development_dependency 'rake'
-  s.add_development_dependency 'rack'
   s.add_development_dependency 'thin'
 end
