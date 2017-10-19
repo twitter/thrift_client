@@ -6,7 +6,7 @@ A Thrift client wrapper that encapsulates some common failover behavior.
 
 * Transparent connection management
 * Configurable failover and retry backoff
-* Ruby 1.9 compatibility
+* Ruby 2.1 compatibility
 * ThriftClient::Simple class, for working without generated bindings.
 
 The Github source repository is {here}[http://github.com/twitter/thrift_client/]. Patches and contributions are very welcome.
@@ -35,7 +35,7 @@ Servers that throw an error get marked as dead and will only be retried every se
 
 == Installation
 
-You need Ruby 1.8 or 1.9. If you have those, just run:
+You need Ruby 2.1.7. Just run:
 
   sudo gem install thrift_client
 
@@ -44,8 +44,8 @@ You need Ruby 1.8 or 1.9. If you have those, just run:
 To contribute changes:
 
 1. Fork the project
-2. make your change, adding tests
-3. send a pull request to twitter and ryanking
+2. Make your change, adding tests
+3. Send a pull request to twitter
 
 == Reporting problems
 
