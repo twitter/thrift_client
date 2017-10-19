@@ -1,3 +1,5 @@
+require 'thrift/server/thin_http_server'
+
 module Greeter
   class Handler
     def greeting(name)

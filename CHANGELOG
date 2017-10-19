@@ -1,3 +1,5 @@
+v0.10.0 Update thrift dep to 0.10.0 and fix broken tests
+
 v0.9.3 Remove dependency on Mongrel
 Allow users to create wrapped exceptions eagerly
 
