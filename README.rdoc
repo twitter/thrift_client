@@ -39,6 +39,10 @@ You need Ruby 2.1.7. Just run:
 
   sudo gem install thrift_client
 
+== Additional Documentation
+
+Additional documentation and api access can be found {here}[http://www.rubydoc.info/gems/thrift/Thrift]
+
 == Contributing
 
 To contribute changes:
