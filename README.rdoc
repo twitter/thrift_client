@@ -41,7 +41,7 @@ You need Ruby 2.1.7. Just run:
 
 == Additional Documentation
 
-Additional documentation and api access can be found {here}[http://www.rubydoc.info/gems/thrift/0.9.1/Thrift]
+Additional documentation and api access can be found {here}[http://www.rubydoc.info/gems/thrift/Thrift]
 
 == Contributing
 
