@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
 
   s.require_paths = ["lib"]
 
-  s.add_dependency("thrift", ["~> 0.10.0"])
+  s.add_dependency("thrift", ["~> 0.11.0"])
 
   s.add_development_dependency 'rack'
   s.add_development_dependency 'rake'
