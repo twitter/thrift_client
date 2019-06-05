@@ -27,7 +27,7 @@ module Greeter
   end
 
   # client:
-  # trans = Thrift::HTTPClientTransport.new("http://127.0.0.1:9292/greeter")
+  # trans = Thrift::HTTPClientTransport.new("https://127.0.0.1:9292/greeter")
   # prot = Thrift::BinaryProtocol.new(trans)
   # c = Greeter::Client.new(prot)
   class HTTPServer
